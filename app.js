@@ -29,16 +29,7 @@ app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
 
-app.get('/items', (req, res) => {
-  connection.query('SELECT * FROM items', (err, results) => {
-    if (err) {
-      res.status(500).send(err);
-      return;
-    }
-    res.json(results);
-  });
-});
-
+// Create a new item
 app.post('/items', (req, res) => {
   const newItem = { name: req.body.name };
   connection.query('INSERT INTO items SET ?', newItem, (err, results) => {
@@ -50,6 +41,33 @@ app.post('/items', (req, res) => {
   });
 });
 
+// Read all items
+app.get('/items', (req, res) => {
+  connection.query('SELECT * FROM items', (err, results) => {
+    if (err) {
+      res.status(500).send(err);
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Read a single item by ID
+app.get('/items/:id', (req, res) => {
+  connection.query('SELECT * FROM items WHERE id = ?', [req.params.id], (err, results) => {
+    if (err) {
+      res.status(500).send(err);
+      return;
+    }
+    if (results.length === 0) {
+      res.status(404).send('Item not found');
+      return;
+    }
+    res.json(results[0]);
+  });
+});
+
+// Update an item by ID
 app.put('/items/:id', (req, res) => {
   const updatedItem = { name: req.body.name };
   connection.query('UPDATE items SET ? WHERE id = ?', [updatedItem, req.params.id], (err, results) => {
@@ -57,14 +75,23 @@ app.put('/items/:id', (req, res) => {
       res.status(500).send(err);
       return;
     }
+    if (results.affectedRows === 0) {
+      res.status(404).send('Item not found');
+      return;
+    }
     res.json({ id: req.params.id, ...updatedItem });
   });
 });
 
+// Delete an item by ID
 app.delete('/items/:id', (req, res) => {
   connection.query('DELETE FROM items WHERE id = ?', [req.params.id], (err, results) => {
     if (err) {
       res.status(500).send(err);
+      return;
+    }
+    if (results.affectedRows === 0) {
+      res.status(404).send('Item not found');
       return;
     }
     res.status(204).send();
