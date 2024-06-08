@@ -50,6 +50,27 @@ app.post('/items', (req, res) => {
   });
 });
 
+app.put('/items/:id', (req, res) => {
+  const updatedItem = { name: req.body.name };
+  connection.query('UPDATE items SET ? WHERE id = ?', [updatedItem, req.params.id], (err, results) => {
+    if (err) {
+      res.status(500).send(err);
+      return;
+    }
+    res.json({ id: req.params.id, ...updatedItem });
+  });
+});
+
+app.delete('/items/:id', (req, res) => {
+  connection.query('DELETE FROM items WHERE id = ?', [req.params.id], (err, results) => {
+    if (err) {
+      res.status(500).send(err);
+      return;
+    }
+    res.status(204).send();
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
